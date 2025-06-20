@@ -1,0 +1,7 @@
+SA:
+  t0: 10
+  tmin: 1e-2
+  alpha: 0.99
+random:
+  l: 1
+  r: 3

@@ -1,0 +1,38 @@
+# config files
+__pycache__/
+.idea/
+.git/
+.vscode/
+.github/
+
+# llm key
+*key.txt
+
+# Shaoyu
+debug*
+config/llm-key.txt
+bug_repro.py
+exp.*
+paper/
+
+# linhaifeng
+lhf_testing/
+.coverage
+.coveragerc
+tmp.py
+
+# specifical for DL models
+*models/
+*.pth
+
+# whitefox and titanfuzz legacy
+torch-exec/
+*titanfuzz*
+*whitefox*
+
+# Large files: output and results
+output/
+results/
+tests/
+*.json
+.*coverage

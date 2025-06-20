@@ -4,8 +4,9 @@
 
 ### Hardware environment
 
-> [IMPORTANT]**General test-bed requirements**
->
+> [IMPORTANT]
+> 
+> **General test-bed requirements**
 > - **OS**: Ubuntu >= 20.04;
 > - **CPU**: X86/X64 CPU;
 > - **GPU**: CUDA architecture (V100, A6000, A100, etc.);

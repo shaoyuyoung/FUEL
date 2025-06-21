@@ -3,4 +3,4 @@
 python experiments/collect_code_coverage.py \
 --tech fuel \
 --lib pytorch \
---folder results/fuel/pytorch-native
+--folder results/fuel/pytorch

@@ -1,4 +1,4 @@
-## Introduction
+# <img src="assets/FUEL-logo.png" alt="Project logo" width="30"> May the Feedback Be with You! Unlocking the Power of Feedback-Driven Deep Learning Framework Fuzzing via LLMs
 
 ## Experiment Setup
 

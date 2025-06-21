@@ -4,7 +4,7 @@
 
 ### Hardware environment
 
-> [IMPORTANT]
+> [!IMPORTANT]
 > 
 > **General test-bed requirements**
 > - **OS**: Ubuntu >= 20.04;

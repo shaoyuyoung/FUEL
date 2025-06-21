@@ -1,141 +1,230 @@
+"""
+File management system for the FUEL project.
+Provides file operations and path management functionality.
+"""
 import os
 import shutil
 from pathlib import Path
+from typing import Dict, Optional
 
 
-class File:
-    lib = "pytorch"
-    # basic dir paths
-    root_dir, input_dir, output_dir, test_dir = "", "", "", ""
-    cur_filename = ""
-
-    rendered_code, eliminated_code = "", ""
-
-    # running time files
-    tmp_py = ""
-    validate_file = ""
-    err_file, total_errs_file = "", ""
-    fail_file, success_file = "", ""
-    crash_file, skip_file = "", ""
-    bug_file, bug_report = "", ""
-    als_file, gen_file = "", ""
-
-    res_base_file, res_target_file = "", ""
-
-    cov_rc_file = ""
-    cov_base_file, cov_target_file = "", ""
-
-    feedback_file, ops_file, fix_file = "", "", ""
-
-    @classmethod
-    def init(cls, root_dir, input_dir, output_dir, lib):
-        cls.lib = lib
-        cls.set_root_dir(root_dir)
-        cls.set_input_dir(os.path.join(input_dir, lib))
-        cls.set_output_dir(output_dir)
-        cls.set_test_dir(lib)
-        cls.set_output_file()
-        cls.set_coverage_file()
-        cls.get_library_path()
-
-    @classmethod
-    def set_input_dir(cls, folder_name: str):
-        cls.input_dir = os.path.join(cls.root_dir, folder_name)
-        if Path(cls.input_dir).exists():
-            shutil.rmtree(Path(cls.input_dir))
-        Path(cls.input_dir).mkdir(parents=True)
-
-    @classmethod
-    def set_output_dir(cls, folder_name):
-        cls.output_dir = os.path.join(cls.root_dir, folder_name)
-        if not os.path.exists(cls.output_dir):
-            os.mkdir(cls.output_dir)
-
-    @classmethod
-    def set_test_dir(cls, lib):
-        cls.test_dir = os.path.join(cls.output_dir, lib)
-        if os.path.exists(cls.test_dir):
-            shutil.rmtree(cls.test_dir, ignore_errors=True)
-        os.mkdir(cls.test_dir)
-
-    @classmethod
-    def set_output_file(cls):
-        cls.total_errs_file = os.path.join(cls.test_dir, "total_errs.log")
-        cls.err_file = os.path.join(cls.test_dir, "err.log")
-        cls.success_file = os.path.join(cls.test_dir, "success.log")
-        cls.fail_file = os.path.join(cls.test_dir, "fail.log")
-        cls.validate_file = os.path.join(cls.test_dir, "validate.log")
-        cls.tmp_py = os.path.join(cls.test_dir, "tmp.py")
-        cls.res_base_file = os.path.join(cls.test_dir, "res_base.bin")
-        cls.res_target_file = os.path.join(cls.test_dir, "res_target.bin")
-        cls.bug_file = os.path.join(cls.test_dir, "bug.log")
-        cls.bug_report = os.path.join(cls.test_dir, "bug_report.log")
-        cls.als_file = os.path.join(cls.test_dir, "als.log")
-        cls.gen_file = os.path.join(cls.test_dir, "gen.log")
-        cls.skip_file = os.path.join(cls.test_dir, "skip.log")
-        cls.ops_file = os.path.join(cls.test_dir, "ops.log")
-        cls.feedback_file = os.path.join(cls.test_dir, "feedback.log")
-        cls.fix_file = os.path.join(cls.test_dir, "fix.log")
-
-    @classmethod
-    def set_coverage_file(cls):
-        cls.cov_base_file = os.path.join(cls.test_dir, "base.coverage")
-        cls.cov_target_file = os.path.join(cls.test_dir, "target.coverage")
-        cls.cov_rc_file = os.path.join(cls.test_dir, ".coveragerc")
-        with open(cls.cov_rc_file, "w") as f:
+class _SimpleFileManager:
+    """Internal file manager implementation."""
+    
+    def __init__(self, root_dir: str, input_dir: str, output_dir: str, lib: str):
+        self.lib = lib
+        self.root_dir = root_dir
+        self.input_dir = os.path.join(root_dir, input_dir, lib)
+        self.output_dir = os.path.join(root_dir, output_dir)
+        self.test_dir = os.path.join(self.output_dir, lib)
+        
+        # Runtime state variables
+        self.cur_filename = ""
+        self.rendered_code = ""
+        self.eliminated_code = ""
+        
+        # Initialize directories and file paths
+        self._setup_directories()
+        self._setup_file_paths()
+        self._setup_library_path()
+    
+    def _setup_directories(self):
+        """Set up directory structure."""
+        # Create input directory
+        if Path(self.input_dir).exists():
+            shutil.rmtree(Path(self.input_dir))
+        Path(self.input_dir).mkdir(parents=True)
+        
+        # Create output directory
+        if not os.path.exists(self.output_dir):
+            os.makedirs(self.output_dir, exist_ok=True)
+        
+        # Create test directory
+        if os.path.exists(self.test_dir):
+            shutil.rmtree(self.test_dir, ignore_errors=True)
+        os.makedirs(self.test_dir, exist_ok=True)
+    
+    def _setup_file_paths(self):
+        """Set up file paths."""
+        # Log files
+        self.total_errs_file = os.path.join(self.test_dir, "total_errs.log")
+        self.err_file = os.path.join(self.test_dir, "err.log")
+        self.success_file = os.path.join(self.test_dir, "success.log")
+        self.fail_file = os.path.join(self.test_dir, "fail.log")
+        self.validate_file = os.path.join(self.test_dir, "validate.log")
+        self.bug_file = os.path.join(self.test_dir, "bug.log")
+        self.bug_report = os.path.join(self.test_dir, "bug_report.log")
+        self.als_file = os.path.join(self.test_dir, "als.log")
+        self.gen_file = os.path.join(self.test_dir, "gen.log")
+        self.skip_file = os.path.join(self.test_dir, "skip.log")
+        self.ops_file = os.path.join(self.test_dir, "ops.log")
+        self.feedback_file = os.path.join(self.test_dir, "feedback.log")
+        self.fix_file = os.path.join(self.test_dir, "fix.log")
+        
+        # Runtime files
+        self.tmp_py = os.path.join(self.test_dir, "tmp.py")
+        self.res_base_file = os.path.join(self.test_dir, "res_base.bin")
+        self.res_target_file = os.path.join(self.test_dir, "res_target.bin")
+        
+        # Coverage files
+        self.cov_base_file = os.path.join(self.test_dir, "base.coverage")
+        self.cov_target_file = os.path.join(self.test_dir, "target.coverage")
+        self.cov_rc_file = os.path.join(self.test_dir, ".coveragerc")
+        
+        # Compatibility: add crash_file attribute
+        self.crash_file = os.path.join(self.test_dir, "crash.log")
+        
+        # Create coverage configuration file
+        with open(self.cov_rc_file, "w") as f:
             f.write("[run]\nsource = ${TESTED_LIB_PATH}")
-
-    @classmethod
-    def remove(cls, filename):
-        if not os.path.exists(filename):
-            return
-        if os.path.isdir(filename):
-            try:
-                shutil.rmtree(filename)
-            except Exception as e:
-                print(e)
-                print(
-                    "The folder deletion failed, possibly due to it being in use or insufficient permissions."
-                )
-        else:
-            os.remove(filename)
-
-    @classmethod
-    def write_file(cls, filename, content, mode="a+"):
-        with open(filename, mode, encoding="utf-8") as f:
-            f.write(content + "\n")
-
-    @classmethod
-    def read_file(cls, filename):
-        if os.path.exists(filename):
-            with open(filename, "r", encoding="utf-8") as f:
-                return f.read()
-        return ""
-
-    @classmethod
-    def open_file(cls, filename, mode="a+"):
-        return open(filename, mode)
-
-    @classmethod
-    def close_file(cls, file):
-        with open(file) as f:
-            f.close()
-
-    @classmethod
-    def get_library_path(cls):
-        if cls.lib == "pytorch":
+    
+    def _setup_library_path(self):
+        """Set up library path environment variable."""
+        if self.lib == "pytorch":
             import torch
-
             lib_path = os.path.dirname(torch.__file__)
-        elif cls.lib == "tensorflow":
+        elif self.lib == "tensorflow":
             import tensorflow as tf
-
             lib_path = os.path.dirname(tf.__file__)
         else:
-            raise ValueError("Invalid library name")
+            raise ValueError(f"Invalid library name: {self.lib}")
+        
         os.environ["TESTED_LIB_PATH"] = lib_path
         return lib_path
+    
+    def write_file(self, filename: str, content: str, mode: str = "a+") -> bool:
+        """Write content to a file."""
+        try:
+            with open(filename, mode, encoding="utf-8") as f:
+                f.write(content + "\n")
+            return True
+        except Exception as e:
+            print(f"Failed to write file {filename}: {e}")
+            return False
+    
+    def read_file(self, filename: str) -> str:
+        """Read content from a file."""
+        try:
+            if os.path.exists(filename):
+                with open(filename, "r", encoding="utf-8") as f:
+                    return f.read()
+        except Exception as e:
+            print(f"Failed to read file {filename}: {e}")
+        return ""
+    
+    def remove_file(self, filename: str) -> bool:
+        """Remove a file or directory."""
+        try:
+            if not os.path.exists(filename):
+                return True
+            
+            if os.path.isdir(filename):
+                shutil.rmtree(filename)
+            else:
+                os.remove(filename)
+            return True
+        except Exception as e:
+            print(f"Failed to remove {filename}: {e}")
+            print("The folder deletion failed, possibly due to it being in use or insufficient permissions.")
+            return False
+    
+    def open_file(self, filename: str, mode: str = "a+"):
+        """Open a file."""
+        return open(filename, mode, encoding="utf-8")
+    
+    def close_file(self, file_handle):
+        """Close a file."""
+        if hasattr(file_handle, 'close'):
+            file_handle.close()
+    
+    def batch_write(self, file_contents: Dict[str, str], mode: str = "a+") -> Dict[str, bool]:
+        """Write multiple files in batch."""
+        results = {}
+        for filename, content in file_contents.items():
+            results[filename] = self.write_file(filename, content, mode)
+        return results
 
+
+class FileMeta(type):
+    """Metaclass for dynamic attribute access."""
+    
+    def __getattr__(cls, name):
+        """Get attribute from instance when class attribute does not exist."""
+        if hasattr(cls, '_instance') and cls._instance:
+            instance = cls._instance
+            if hasattr(instance, name):
+                return getattr(instance, name)
+        raise AttributeError(f"'{cls.__name__}' object has no attribute '{name}'")
+    
+    def __setattr__(cls, name, value):
+        """Set attribute on instance if it is an instance attribute."""
+        if hasattr(cls, '_instance') and cls._instance and hasattr(cls._instance, name):
+            # For runtime state attributes, set on instance
+            if name in ['cur_filename', 'rendered_code', 'eliminated_code']:
+                setattr(cls._instance, name, value)
+                return
+        super().__setattr__(name, value)
+
+
+class File(metaclass=FileMeta):
+    """File management class providing file operations and path management."""
+    
+    _instance: Optional[_SimpleFileManager] = None
+    
     @classmethod
+    def init(cls, root_dir, input_dir, output_dir, lib):
+        """Initialize the file manager."""
+        cls._instance = _SimpleFileManager(root_dir, input_dir, output_dir, lib)
+    
+    @classmethod
+    def _get_instance(cls) -> _SimpleFileManager:
+        """Get instance, ensuring it has been initialized."""
+        if cls._instance is None:
+            raise RuntimeError("File manager not initialized. Call File.init() first.")
+        return cls._instance
+    
+    # Class method compatibility
+    @classmethod
+    def write_file(cls, filename, content, mode="a+"):
+        """Write content to a file."""
+        return cls._get_instance().write_file(filename, content, mode)
+    
+    @classmethod
+    def read_file(cls, filename):
+        """Read content from a file."""
+        return cls._get_instance().read_file(filename)
+    
+    @classmethod
+    def remove(cls, filename):
+        """Remove a file or directory."""
+        return cls._get_instance().remove_file(filename)
+    
+    @classmethod
+    def open_file(cls, filename, mode="a+"):
+        """Open a file."""
+        return cls._get_instance().open_file(filename, mode)
+    
+    @classmethod
+    def close_file(cls, file_handle):
+        """Close a file."""
+        return cls._get_instance().close_file(file_handle)
+    
+    @classmethod
+    def get_library_path(cls):
+        """Get library path."""
+        return cls._get_instance()._setup_library_path()
+    
+    @classmethod 
     def set_root_dir(cls, root_dir):
-        cls.root_dir = root_dir
+        """Set root directory."""
+        if cls._instance:
+            cls._instance.root_dir = root_dir
+    
+    # Batch operations
+    @classmethod
+    def batch_write(cls, file_contents: Dict[str, str], mode: str = "a+"):
+        """Write multiple files in batch."""
+        return cls._get_instance().batch_write(file_contents, mode)
+    
+    # Attribute delegation - automatic handling through __getattr__
+    # These attributes are automatically delegated to instance through __getattr__ method

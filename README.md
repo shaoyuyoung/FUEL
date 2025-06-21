@@ -11,14 +11,15 @@
 
 ## 📋 Introduction
 
-**FUEL** (FeedBack-driven deep learning framework fUzzing via LLMs) is an advanced deep learning framework fuzzing tool designed to detect vulnerabilities and inconsistencies in mainstream deep learning frameworks such as PyTorch and TensorFlow. FUEL combines the intelligent generation capabilities of Large Language Models (LLMs) with feedback-driven heuristic search algorithms to efficiently generate high-quality test cases and discover potential issues in deep learning frameworks.
+**FUEL** (**F**eedback-driven f**U**zzing for d**E**ep **L**earning frameworks via LLMs) is an advanced deep learning (DL) framework fuzzing tool designed to detect bugs in mainstream DL frameworks such as [PyTorch](https://github.com/pytorch/pytorch) and [TensorFlow](https://github.com/tensorflow/tensorflow). FUEL combines the powerful generation capabilities of Large Language Models (LLMs) with feedback-driven heuristic search algorithms to efficiently generate high-quality test cases and discover potential bugs in DL frameworks. Additionally, FUEL features intelligent program self-repair capabilities that automatically distinguish between actual framework bugs and invalid test cases, enabling continuous testing optimization.
 
 ## 🎯 Why FUEL?
 
 ### 🔥 Core Advantages
 
 - **🤖 Intelligent Code Generation**: Leverages Large Language Models to generate complex and effective deep learning model test cases
-- **🔄 Feedback-Driven**: Smart feedback mechanism based on execution results and code coverage to continuously optimize test generation strategies
+- **🔄 Feedback-Driven**: Smart feedback mechanism based on execution results and code coverage to continuously optimize test generation strategies via LLMs
+- **🔧 Program Self-Repair**: Automatically distinguishes between framework bugs and invalid test cases, then intelligently repairs invalid models using LLM-guided analysis
 - **📊 Heuristic Search**: Integrates heuristic algorithms like Simulated Annealing (SA) for intelligent API operator selection
 - **🔍 Differential Testing**: Supports multiple differential testing modes (hardware differences, compiler differences, etc.)
 - **📈 Efficient Detection**: Successfully discovered 104 new bugs, with 93 confirmed and 47 fixed

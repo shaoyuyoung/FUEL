@@ -7,13 +7,26 @@ import torch
 from ..exec.utils import to_cuda
 from .common import record_exception, torch_save
 from .oracle import OracleType
+from ..utils.Filer import File
 
 os.environ["PYTHONWARNINGS"] = "ignore"
 model: torch.nn.Module
 inputs: List[torch.tensor]
 
 
-def main(diff_type, code, res_file, version, filename, err_file, total_errs_file):
+def main(diff_type, code, res_file, version, filename, err_file, total_errs_file, lib):
+    # Initialize File manager to avoid RuntimeError
+    try:
+        # Extract directory paths from file paths
+        output_dir = os.path.dirname(err_file)
+        root_dir = os.getcwd()
+        input_dir = os.path.join(root_dir, "results", "fuel", lib)
+        
+        # Initialize File manager
+        File.init(root_dir, input_dir, output_dir, lib)
+    except Exception as e:
+        print(f"Warning: Failed to initialize File manager: {e}")
+    
     global model, inputs
     torch.manual_seed(0)
     exec(code, globals())
@@ -70,6 +83,7 @@ if __name__ == "__main__":
     parser.add_argument("--err_file", type=str, default="")
     parser.add_argument("--total_errs_file", type=str, default="")
     args = parser.parse_args()
+    print(f"---------------Current test case is {args.filename} ---------------")
     main(
         args.diff_type,
         args.code,
@@ -78,4 +92,5 @@ if __name__ == "__main__":
         args.filename,
         args.err_file,
         args.total_errs_file,
+        args.lib,
     )

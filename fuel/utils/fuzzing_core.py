@@ -169,7 +169,8 @@ class FuzzingCore:
             
             FeedBack.success_times += 1
             if FeedBack.success_times >= 2:
-                logger.debug(f"The feedback follows up: \n{feedbk}\n")
+                logger.success(f"execute successfully\n")
+                # logger.debug(f"The feedback follows up: \n{feedbk}\n")
         else:
             feedbk = exception
             feedback_data = {
@@ -185,9 +186,10 @@ class FuzzingCore:
             )
             
             if FeedBack.success_times >= 2:
-                logger.exception(f"The feedback follows up: \n{feedbk}\n")
+                logger.success(f"execute successfully\n")
+                # logger.exception(f"The feedback follows up: \n{feedbk}\n")
         
-        logger.debug(f"The code follows up: \n\n{File.eliminated_code}\n")
+        # logger.debug(f"The code follows up: \n\n{File.eliminated_code}\n")
         logger.info(
             f"fix total: {FeedBack.fix_success_times + FeedBack.fix_fail_times},success:{FeedBack.fix_success_times}\n"
         )

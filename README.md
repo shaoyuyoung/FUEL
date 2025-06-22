@@ -161,6 +161,12 @@ bash coverage.sh
 
 So far, FUEL has detected **104** previously unknown new bugs, with **93** already confirmed and **47** already fixed. **14** detected bugs were labeled as *high-priority*, and **one** was labeled as 🤯*utmost priority*. **5** detected bugs has been assigned with 🐞*CVE IDs*. The evidence can be viwed in [Google Table](https://docs.google.com/spreadsheets/d/1qVoSdLj_SvfDHrtKMFkR6xVsCj99ABE8Rm9SgljcdGY/edit?gid=959752128#gid=959752128).
 
+## 📡 Contact
+
+- [Shaoyu Yang](https://github.com/shaoyuyoung): core developer
+- [Haifeng Lin](https://github.com/lingebeng): core developer
+- [Chunrong Fang](https://chunrong.github.io/): supervisor
+
 ## 🙏 Acknowledgement
 We thank [NNSmith](https://github.com/ise-uiuc/nnsmith), [TitanFuzz](https://github.com/ise-uiuc/TitanFuzz), and [WhiteFox](https://github.com/ise-uiuc/WhiteFox) for their admirable open-source spirit, which has largely inspired this project.
 

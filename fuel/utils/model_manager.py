@@ -3,7 +3,7 @@ import os
 
 from ..model import AlsRemoteModel, GenLocalModel, GenRemoteModel, AlsLocalModel, load_single_model_from_config
 from ..guidance.Random import Random
-from ..guidance.SA import SA
+from ..guidance.FASA import FASA
 from .util import load_config_file
 
 
@@ -76,9 +76,9 @@ class ModelManager:
         
         heuristic_config = load_config_file(heuristic_config_path)[heuristic_name]
         
-        if heuristic_name == "SA":
-            logger.info("[HEURISTIC]: Simulated Annealing!")
-            return SA(
+        if heuristic_name == "FASA":
+            logger.info("[HEURISTIC]: Feedback-Aware Simulated Annealing!")
+            return FASA(
                 float(heuristic_config["t0"]),
                 float(heuristic_config["tmin"]),
                 float(heuristic_config["alpha"]),

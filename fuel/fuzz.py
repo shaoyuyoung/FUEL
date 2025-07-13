@@ -112,12 +112,11 @@ def cli(ctx, lib, gen_model_config, als_model_config, gen_prompt_config, als_pro
 @click.option(
     "max_time", "--max_time", type=int, default=10000, help="max time for fuzzing"
 )
-
 @click.option(
     "heuristic",
     "--heuristic",
     type=str,
-    default="SA",
+    default="FASA",
     help="use some heuristic to generate tests",
 )
 @click.option(

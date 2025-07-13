@@ -17,9 +17,9 @@ class Operator:
         self.flag = True  # Whether it is the first use.
 
 
-class SA:
+class FASA:
     """
-    SA: Simulated Annealing
+    FASA: Feedback-Aware Simulated Annealing
     T0: Initial temperature
     Tmin: Termination temperature
     alpha: Cooling rate
@@ -86,9 +86,9 @@ class SA:
 
     def cal_value(self, op):
         value = (
-            SA.cal_used_times(op.used_times)
-            + SA.cal_exception_count(op.exception_count)
-            + SA.cal_cov_count(op.cov_count)
+            FASA.cal_used_times(op.used_times)
+            + FASA.cal_exception_count(op.exception_count)
+            + FASA.cal_cov_count(op.cov_count)
         )
         if self.ops[op.op_name].flag:
             value += 1
@@ -111,4 +111,4 @@ class SA:
 
     @staticmethod
     def cal_cov_count(x):
-        return 1 - math.exp(-x * 0.001)
+        return 1 - math.exp(-x * 0.001) 

@@ -20,7 +20,7 @@
 - **🤖 Intelligent Code Generation**: Leverages Large Language Models to generate complex and effective deep learning model test cases
 - **🔄 Feedback-Driven**: Smart feedback mechanism based on execution results and code coverage to continuously optimize test generation strategies via LLMs
 - **❤️‍🩹 Program Self-Repair**: Automatically distinguishes between framework bugs and invalid test cases, then intelligently repairs invalid models using LLM-guided analysis
-- **📊 Heuristic Search**: Integrates heuristic algorithms like Simulated Annealing (SA) for intelligent API operator selection
+- **📊 Heuristic Search**: Integrates heuristic algorithms like Feedback-Aware Simulated Annealing (FASA) for intelligent API operator selection
 - **🔬 Differential Testing**: Supports multiple differential testing modes (hardware differences, compiler differences, etc.)
 - **🔍 Efficient Detection**: Successfully discovered 104 new bugs, with 93 confirmed and 47 fixed
 
@@ -127,7 +127,7 @@ echo "$key" > ./config/llm-key.txt
 ```shell
 python -m fuel.fuzz --lib pytorch run_fuzz \
                     --max_round 1000 \
-                    --heuristic SA \
+                    --heuristic FASA \
                     --diff_type cpu_compiler
 ```
 
@@ -135,7 +135,7 @@ python -m fuel.fuzz --lib pytorch run_fuzz \
 
 - `--lib`: Target deep learning library (`pytorch` or `tensorflow`)
 - `--max_round`: Maximum number of testing rounds
-- `--heuristic`: Heuristic algorithm (`SA`, `Random`, or `None`)
+- `--heuristic`: Heuristic algorithm (`FASA`, `Random`, or `None`)
 - `--diff_type`: Differential testing type (`hardware`, `cpu_compiler`, `cuda_compiler`)
 
 Note that the fuzzing experiment is really time-consuming. Maybe you should check the results after about ~20hours.
@@ -156,7 +156,7 @@ If you want to get the detected bugs, please check [outputs/bug_reports.txt](out
 python -m fuel.fuzz --lib pytorch run_fuzz \
                     --use_local_gen \
                     --max_round 1000 \
-                    --heuristic SA
+                    --heuristic FASA
 ```
 
 #### 👊 Custom Operator Selection

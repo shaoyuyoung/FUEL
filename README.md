@@ -116,7 +116,7 @@ For the below command, you should replace `[YOUR_API_KEY]` with your own DeepSee
 
 ```shell
 key="[YOUR_API_KEY]"
-echo "$key" > ./config/llm-key.txt
+echo "$key" > ./config/deepseek-key.txt
 ```
 
 #### 🏃 Start fuzzing

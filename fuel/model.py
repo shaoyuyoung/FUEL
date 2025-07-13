@@ -97,6 +97,9 @@ class RemoteModel(Model):
             {"role": "system", "content": role},
             {"role": "user", "content": f"{prompt}"},
         ]
+
+        # @SHAOYU: Different LLM API service providers have different machenism to be forced to generate code.
+        # We need to add different processing ways for different providers.
         if code_gen:
             messages.append(
                 {"role": "assistant", "content": "```python\n", "prefix": True}

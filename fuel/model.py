@@ -2,6 +2,7 @@ import os
 from abc import abstractmethod
 from pathlib import Path
 import time
+import yaml
 
 from loguru import logger
 from openai import OpenAI
@@ -39,15 +40,15 @@ class Model:
         raise NotImplementedError
 
 
-class ServerModel(Model):
+class RemoteModel(Model):
     """
-    managing server LLM model (gen and als)
+    managing remote LLM model (gen and als)
     """
 
     def __init__(self, config, **kwargs):
         super().__init__(config, **kwargs)
 
-        self.config = config["server"]
+        self.config = config
         # Add timeout setting support
         timeout = self.config.get("timeout", 30)  # Default 30 seconds timeout
         
@@ -126,7 +127,7 @@ class LocalModel(Model):
 
     def __init__(self, config, **kwargs):
         super().__init__(config, **kwargs)
-        self.config = config["local"]
+        self.config = config
         self.model_name = self.config["model"]
         self.tokenizer = AutoTokenizer.from_pretrained(self.model_name)
         self.native_model = LLM(
@@ -152,7 +153,7 @@ class LocalModel(Model):
         raise NotImplementedError
 
 
-class AlsServerModel(ServerModel):
+class AlsRemoteModel(RemoteModel):
     def __init__(self, config, **kwargs):
         super().__init__(config, **kwargs)
 
@@ -182,7 +183,7 @@ class AlsServerModel(ServerModel):
         )
 
 
-class GenServerModel(ServerModel):
+class GenRemoteModel(RemoteModel):
     def __init__(self, config, **kwargs):
         super().__init__(config, **kwargs)
 
@@ -239,3 +240,72 @@ class AlsLocalModel(LocalModel):  # TODO@SHAOYU: add the analyze function for al
         self, prompt_config, res_dir, flag: bool, feedback: dict = None, **kwargs
     ):
         raise NotImplementedError
+
+
+def load_model_from_config(config_path):
+    """
+    Load model instances from configuration file
+    
+    Args:
+        config_path: Path to configuration file
+        
+    Returns:
+        tuple: (gen_model, als_model) corresponding model instances
+    """
+    with open(config_path, 'r', encoding='utf-8') as f:
+        config = yaml.safe_load(f)
+    
+    method = config.get('method', 'remote')
+    model_config = config.get('config', {})
+    
+    if method == 'local':
+        gen_model = GenLocalModel(model_config)
+        als_model = AlsLocalModel(model_config)
+        logger.info(f"[LOCAL] Loaded model: {model_config.get('model', 'Unknown')}")
+    elif method == 'remote':
+        gen_model = GenRemoteModel(model_config)
+        als_model = AlsRemoteModel(model_config)
+        logger.info(f"[REMOTE] Loaded model: {model_config.get('model', 'Unknown')}")
+    else:
+        raise ValueError(f"Unsupported model method: {method}")
+    
+    return gen_model, als_model
+
+
+def load_single_model_from_config(config_path, model_type):
+    """
+    Load single model instance from configuration file
+    
+    Args:
+        config_path: Path to configuration file
+        model_type: Model type ('gen' or 'als')
+        
+    Returns:
+        Model instance
+    """
+    with open(config_path, 'r', encoding='utf-8') as f:
+        config = yaml.safe_load(f)
+    
+    method = config.get('method', 'remote')
+    model_config = config.get('config', {})
+    
+    if method == 'local':
+        if model_type == 'gen':
+            model = GenLocalModel(model_config)
+        elif model_type == 'als':
+            model = AlsLocalModel(model_config)
+        else:
+            raise ValueError(f"Unsupported model type: {model_type}")
+        logger.info(f"[LOCAL] Loaded {model_type} model: {model_config.get('model', 'Unknown')}")
+    elif method == 'remote':
+        if model_type == 'gen':
+            model = GenRemoteModel(model_config)
+        elif model_type == 'als':
+            model = AlsRemoteModel(model_config)
+        else:
+            raise ValueError(f"Unsupported model type: {model_type}")
+        logger.info(f"[REMOTE] Loaded {model_type} model: {model_config.get('model', 'Unknown')}")
+    else:
+        raise ValueError(f"Unsupported model method: {method}")
+    
+    return model

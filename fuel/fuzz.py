@@ -23,11 +23,18 @@ ROOT_DIR = os.getcwd()
     help="Library Under Test",
 )
 @click.option(
-    "model_config",
-    "--model_config",
+    "gen_model_config",
+    "--gen_model_config",
     type=str,
-    default="config/model.yaml",
-    help="Path to the model configuration file",
+    default="config/model/deepseek.yaml",
+    help="Path to the generation model configuration file",
+)
+@click.option(
+    "als_model_config",
+    "--als_model_config", 
+    type=str,
+    default="config/model/deepseek.yaml",
+    help="Path to the analysis model configuration file",
 )
 @click.option(
     "gen_prompt_config",
@@ -51,7 +58,7 @@ ROOT_DIR = os.getcwd()
     help="Path to the heuristic configuration file",
 )
 @click.pass_context
-def cli(ctx, lib, model_config, gen_prompt_config, als_prompt_config, heuristic_config):
+def cli(ctx, lib, gen_model_config, als_model_config, gen_prompt_config, als_prompt_config, heuristic_config):
     ctx.ensure_object(dict)
     ctx.obj["lib"] = lib
 
@@ -59,7 +66,6 @@ def cli(ctx, lib, model_config, gen_prompt_config, als_prompt_config, heuristic_
     try:
         validated_configs = validate_all_configs(
             lib=lib,
-            model_config=model_config,
             gen_prompt_config=gen_prompt_config,
             als_prompt_config=als_prompt_config,
             heuristic_config=heuristic_config
@@ -67,6 +73,10 @@ def cli(ctx, lib, model_config, gen_prompt_config, als_prompt_config, heuristic_
         
         # Store validated config paths
         ctx.obj.update(validated_configs)
+        
+        # Store model config paths
+        ctx.obj["GEN_MODEL_CONFIG"] = gen_model_config
+        ctx.obj["ALS_MODEL_CONFIG"] = als_model_config
         
     except Exception as e:
         logger.error(f"Failed to setup configuration files: {e}")
@@ -103,17 +113,10 @@ def cli(ctx, lib, model_config, gen_prompt_config, als_prompt_config, heuristic_
     "max_time", "--max_time", type=int, default=10000, help="max time for fuzzing"
 )
 @click.option(
-    "use_local_gen",
-    "--use_local_gen",
-    is_flag=True,
-    default=False,
-    help="whether to use local model to generate tests",
-)
-@click.option(
     "heuristic",
     "--heuristic",
     type=str,
-    default="SA",
+    default="FASA",
     help="use some heuristic to generate tests",
 )
 @click.option(
@@ -137,7 +140,6 @@ def run_fuzz(
     diff_type,
     max_round,
     max_time,
-    use_local_gen,
     heuristic,
     op_set,
     op_nums,
@@ -146,8 +148,7 @@ def run_fuzz(
     lib = ctx.obj["lib"]
     
     # Load configuration files
-    model_config, gen_prompt_config, als_prompt_config = (
-        load_config_file(ctx.obj["MODEL_CONFIG"]),
+    gen_prompt_config, als_prompt_config = (
         load_config_file(
             ctx.obj["GEN_PROMPT_CONFIG"]
             if heuristic != "None"
@@ -157,7 +158,10 @@ def run_fuzz(
     )
 
     # Setup models
-    gen_model, als_model = ModelManager.setup_models(model_config, use_local_gen)
+    gen_model, als_model = ModelManager.setup_models(
+        gen_model_config=ctx.obj["GEN_MODEL_CONFIG"],
+        als_model_config=ctx.obj["ALS_MODEL_CONFIG"]
+    )
     
     # Setup heuristic algorithm
     heuristic_instance = ModelManager.setup_heuristic(

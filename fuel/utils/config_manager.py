@@ -99,14 +99,13 @@ def _download_config_file(config_type: str, save_path: str, lib: str = None):
         raise RuntimeError(f"Failed to process or download configuration file from {url} due to an unexpected error.") from e
 
 
-def validate_all_configs(lib: str, model_config: str, gen_prompt_config: str, 
+def validate_all_configs(lib: str, gen_prompt_config: str, 
                         als_prompt_config: str, heuristic_config: str) -> dict:
     """
     Validate and ensure all configuration files exist.
     
     Args:
         lib: Library name
-        model_config: Path to model config
         gen_prompt_config: Path to gen prompt config  
         als_prompt_config: Path to als prompt config
         heuristic_config: Path to heuristic config
@@ -116,9 +115,6 @@ def validate_all_configs(lib: str, model_config: str, gen_prompt_config: str,
     """
     try:
         validated_configs = {}
-        
-        # Validate model config
-        validated_configs["MODEL_CONFIG"] = ensure_config_file_exists(model_config, "model")
         
         # Validate gen prompt config
         gen_prompt_base = ensure_config_file_exists(gen_prompt_config, "gen_prompt", lib)

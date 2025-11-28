@@ -8,6 +8,7 @@ from ..difftesting.difftesting import DiffTesting
 from ..difftesting.oracle import OracleType
 from ..exec.exec_template import exec_template
 from ..feedback.feedback import FeedBack
+from ..feedback.execution_status import ExecutionStatus
 from ..utils.Filer import File
 from ..utils.util import extra_code_from_text
 
@@ -56,12 +57,12 @@ class FuzzingCore:
         )
 
         logger.debug(f"[debug] Generated gen_prompt: {gen_prompt}")
-        # logger.debug(f"Generated als_prompt: {als_prompt_or_text}")
+        logger.debug(f"[debug] Generated als_prompt: {als_prompt_or_text}")
 
         # Write logs
         File.write_file(
             File.gen_file,
-            f"----current round is {FeedBack.cur_round}----\n{gen_prompt.split('### Results')[-1]}",
+            f"----Fuzzing Iteration.{FeedBack.cur_round}----\n{gen_prompt.split('### Results')[-1]}",
         )
 
         # Generate code
@@ -143,16 +144,23 @@ class FuzzingCore:
         return flag
 
     def process_feedback(self, file_path):
-        """Process feedback and coverage"""
+        """Process feedback and coverage based on execution status
+        
+        Handles different execution statuses:
+        - SUCCESS: Calculate coverage and record successful execution
+        - BUG: Record oracle violation (potential framework bug)
+        - EXCEPTION: Record invalid test case (exception in both backends)
+        """
         logger.info(f"<-- After exec, current filename is: {file_path} -->")
         File.write_file(file_path, File.eliminated_code)
 
-        # Get exception status
-        statue, exception = FeedBack.get_exception()
+        # Get execution status
+        status, message = FeedBack.get_status()
 
         feedback_data = {}
-        if statue:
-            # Calculate coverage
+        
+        if status == ExecutionStatus.SUCCESS:
+            # Execution succeeded - calculate coverage
             FeedBack.cal_coverage()
             cov_flag, feedbk = FeedBack.get_delta_coverage()
 
@@ -177,39 +185,50 @@ class FuzzingCore:
 
             File.write_file(
                 File.feedback_file,
-                f"----Current round is {FeedBack.cur_round}----\n"
+                f"----Fuzzing Iteration.{FeedBack.cur_round}----\n"
                 f"Current file is {File.cur_filename}\n"
-                f"{feedbk}\n",
+                f"[SUCCESS] {feedbk}\n",
             )
 
             FeedBack.success_times += 1
             if FeedBack.success_times >= 2:
                 logger.success("execute successfully\n")
                 # logger.debug(f"The feedback follows up: \n{feedbk}\n")
-        else:
-            feedbk = exception
-            
-            # Distinguish between bug (oracle violation) and exception (invalid test)
-            if FeedBack.has_bug:
-                # Oracle violation - written to bug_report
-                feedback_data = {
-                    "code": File.eliminated_code,
-                    "bug": feedbk,
-                }
-                logger.info("Oracle violation detected - treating as potential bug")
-            else:
-                # Invalid test case - exception in both backends
-                feedback_data = {
-                    "code": File.eliminated_code,
-                    "exception": feedbk,
-                }
-                logger.info("Exception in both backends - treating as invalid test")
+                
+        elif status == ExecutionStatus.BUG:
+            # Oracle violation - potential framework bug
+            feedbk = message
+            feedback_data = {
+                "code": File.eliminated_code,
+                "bug": feedbk,
+            }
+            logger.warning("Oracle violation detected - treating as potential bug")
 
             File.write_file(
                 File.feedback_file,
-                f"----Current round is {FeedBack.cur_round}----\n"
+                f"----Fuzzing Iteration.{FeedBack.cur_round}----\n"
                 f"Current file is {File.cur_filename}\n"
-                f"{'[BUG]' if FeedBack.has_bug else '[EXCEPTION]'} {feedbk}\n",
+                f"[BUG] {feedbk}\n",
+            )
+
+            if FeedBack.success_times >= 2:
+                logger.success("execute successfully\n")
+                # logger.exception(f"The feedback follows up: \n{feedbk}\n")
+                
+        elif status == ExecutionStatus.EXCEPTION:
+            # Invalid test case - exception in both backends
+            feedbk = message
+            feedback_data = {
+                "code": File.eliminated_code,
+                "exception": feedbk,
+            }
+            logger.info("Exception in both backends - treating as invalid test")
+
+            File.write_file(
+                File.feedback_file,
+                f"----Fuzzing Iteration.{FeedBack.cur_round}----\n"
+                f"Current file is {File.cur_filename}\n"
+                f"[EXCEPTION] {feedbk}\n",
             )
 
             if FeedBack.success_times >= 2:
@@ -220,6 +239,10 @@ class FuzzingCore:
         logger.info(
             f"fix total: {FeedBack.fix_success_times + FeedBack.fix_fail_times},success:{FeedBack.fix_success_times}\n"
         )
-        logger.success("[Current Round Is Successful!]\n")
+        logger.success("[Current Iteration Is Successful!]\n")
 
-        return {"statue": statue, "feedback": feedback_data}
+        # Return unified status information
+        return {
+            "status": status,  # ExecutionStatus enum type
+            "feedback": feedback_data
+        }

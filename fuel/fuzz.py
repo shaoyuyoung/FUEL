@@ -3,6 +3,7 @@ import os
 import click
 from loguru import logger
 
+from .feedback.execution_status import ExecutionStatus
 from .feedback.feedback import FeedBack
 from .utils.Filer import File
 from .utils.fuzzing_core import FuzzingCore
@@ -48,6 +49,13 @@ ROOT_DIR = os.getcwd()
     default="prompts",
     help="Path to the prompts directory (Markdown format)",
 )
+@click.option(
+    "log_level",
+    "--log_level",
+    type=click.Choice(["DEBUG", "INFO", "SUCCESS", "WARNING", "ERROR", "CRITICAL"], case_sensitive=False),
+    default="INFO",
+    help="Log level (default: INFO). Set to INFO to hide DEBUG messages.",
+)
 @click.pass_context
 def cli(
     ctx,
@@ -56,7 +64,17 @@ def cli(
     als_model_config,
     heuristic_config,
     prompt_dir,
+    log_level,
 ):
+    # Configure logger level
+    logger.remove()  # Remove default handler
+    logger.add(
+        lambda msg: print(msg, end=""),  # Print to stdout
+        level=log_level.upper(),
+        format="<green>{time:YYYY-MM-DD HH:mm:ss}</green> | <level>{level: <8}</level> | <level>{message}</level>",
+        colorize=True,
+    )
+    
     ctx.ensure_object(dict)
     ctx.obj["lib"] = lib
     ctx.obj["GEN_MODEL_CONFIG"] = gen_model_config
@@ -161,7 +179,7 @@ def run_fuzz(
     fuzzing_core = FuzzingCore(gen_model, als_model, prompt_handler, lib)
 
     # Initialize variables
-    feedback_data = {"statue": True, "feedback": {}}
+    feedback_data = {"status": ExecutionStatus.SUCCESS, "feedback": {}}
     flag = True  # Fix flag
 
     # Start fuzzing

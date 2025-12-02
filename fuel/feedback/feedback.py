@@ -38,13 +38,23 @@ class FeedBack:
     def init(cls, lib, diff_type):
         if diff_type == "hardware":
             cls.base_version = "CPU"
-            cls.target_version = "CUDA"
+            import torch
+
+            if torch.cuda.is_available():
+                cls.target_version = "CUDA"
+            elif torch.backends.mps.is_available():
+                cls.target_version = "MPS"
+            else:
+                cls.target_version = "NONE"
         elif diff_type == "cpu_compiler":
             cls.base_version = "Eager(CPU)"
             cls.target_version = "Compiler(CPU)"
         elif diff_type == "cuda_compiler":
             cls.base_version = "Eager(CUDA)"
             cls.target_version = "Compiler(CUDA)"
+        elif diff_type == "mps_compiler":
+            cls.base_version = "Eager(MPS)"
+            cls.target_version = "Compiler(MPS)"
         else:
             cls.base_version = "Base"
             cls.target_version = "Target"
@@ -101,7 +111,9 @@ class FeedBack:
         for pyfile, line_sets in cls.delta_coverage.items():
             # If set is empty, don't print, it's easier to observe!
             if len(line_sets) != 0:
-                text += f"{pyfile}: {len(line_sets)} line(s) of code\n"  # Use code lines
+                text += (
+                    f"{pyfile}: {len(line_sets)} line(s) of code\n"  # Use code lines
+                )
                 cov_flag = True
         if not cov_flag:
             text += "No new coverage is triggered.\n"
@@ -162,30 +174,30 @@ class FeedBack:
     def get_status(cls) -> tuple[ExecutionStatus, str]:
         """
         Get execution status and detailed information
-        
+
         Returns:
-            tuple[ExecutionStatus, str]: 
+            tuple[ExecutionStatus, str]:
                 - ExecutionStatus: Execution status (SUCCESS/BUG/EXCEPTION)
                 - str: Detailed message (success info/bug description/exception info)
-        
+
         Status determination logic:
             - If err.log is empty, execution succeeded, return SUCCESS
             - If has_bug is True, oracle violation was triggered, return BUG
             - If has_exception is True, both backends threw exceptions (invalid test), return EXCEPTION
         """
         exception = File.read_file(File.err_file)
-        
+
         if exception == "":
             # Execution succeeded without any errors
             return ExecutionStatus.SUCCESS, "Nothing Wrong"
         else:
             # Has error information, need to distinguish between bug and exception
             exception = exception.split('<string>", ')[-1]
-            
+
             # Clear error file
             with open(File.err_file, "w") as f:
                 f.write("")
-            
+
             # Determine status based on has_bug and has_exception flags
             if cls.has_bug:
                 # Oracle violation - different backends produce inconsistent results
